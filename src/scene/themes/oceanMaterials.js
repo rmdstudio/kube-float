@@ -1,6 +1,6 @@
 // Copyright (c) 2026 rmd Studio Inc. MIT License.
 import * as THREE from 'three';
-import { clock } from './shared';
+import { clock } from '../shared';
 
 // Fades distant creatures into the water, matching the scene fog.
 const FADE = 'exp(-dist * dist * 0.00003)';
@@ -47,7 +47,7 @@ const bellFragment = /* glsl */ `
   varying float vFade;
 
   void main() {
-    float fresnel = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.0);
+    float fresnel = pow(max(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 0.0), 2.0);
     float ribs = uRibs * smoothstep(0.75, 1.0, sin(vAngle * 12.0)) * vRim;
     vec3 color = uColor * (0.22 + 1.5 * fresnel + 0.5 * ribs) * uGlow;
     float alpha = (0.16 + 0.8 * fresnel + 0.25 * ribs) * uOpacity * vFade;

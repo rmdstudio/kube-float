@@ -4,7 +4,9 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -13,12 +15,15 @@ import Typography from '@mui/material/Typography';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import LabelIcon from '@mui/icons-material/Label';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import LabelOffIcon from '@mui/icons-material/LabelOff';
 import SearchIcon from '@mui/icons-material/Search';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import ZoomInMapIcon from '@mui/icons-material/ZoomInMap';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import { KINDS } from '../constants';
+import { KINDS, kindColor } from '../constants';
 import { glass } from '../theme';
 
 function Dot({ color }) {
@@ -26,7 +31,12 @@ function Dot({ color }) {
 }
 
 function ModeChip({ cluster }) {
-  if (cluster.mode === 'live') return <Chip size="small" color="success" variant="outlined" label="Live" />;
+  if (cluster.mode === 'live') {
+    const chip = (
+      <Chip size="small" color="success" variant="outlined" label={`Live · ${cluster.sources.join(' + ')}`} />
+    );
+    return cluster.error ? <Tooltip title={`Not shown: ${cluster.error}`}>{chip}</Tooltip> : chip;
+  }
   if (cluster.mode === 'connecting') return <Chip size="small" variant="outlined" label="Connecting…" />;
   const chip = (
     <Chip
@@ -37,7 +47,7 @@ function ModeChip({ cluster }) {
       onClick={cluster.canRetry ? cluster.retry : undefined}
     />
   );
-  return cluster.error ? <Tooltip title={`No cluster reachable: ${cluster.error}`}>{chip}</Tooltip> : chip;
+  return cluster.error ? <Tooltip title={`Nothing reachable: ${cluster.error}`}>{chip}</Tooltip> : chip;
 }
 
 export default function TopBar({
@@ -53,6 +63,13 @@ export default function TopBar({
   onSearch,
   onSearchSubmit,
   spacing,
+  theme,
+  themes,
+  onTheme,
+  activity,
+  onToggleActivity,
+  quality,
+  onToggleQuality,
   onSpacing,
   showLabels,
   onToggleLabels,
@@ -147,6 +164,43 @@ export default function TopBar({
           </>
         )}
 
+        <Select
+          size="small"
+          variant="standard"
+          disableUnderline
+          value={theme}
+          onChange={(e) => onTheme(e.target.value)}
+          inputProps={{ 'aria-label': 'Theme' }}
+          sx={{ fontSize: 13 }}
+        >
+          {Object.values(themes).map((t) => (
+            <MenuItem key={t.key} value={t.key}>
+              {t.label}
+            </MenuItem>
+          ))}
+        </Select>
+        <Tooltip
+          title={
+            activity
+              ? 'Activity on: wires and creatures glow with how fast pods are logging. Click to turn off.'
+              : 'Activity off. Click to show how busy pods are, measured by their log output.'
+          }
+        >
+          <IconButton size="small" color={activity ? 'warning' : 'default'} onClick={onToggleActivity}>
+            <LocalFireDepartmentIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip
+          title={
+            quality === 'light'
+              ? 'Graphics: Light, easy on the laptop. Click for Full quality.'
+              : 'Graphics: Full quality, for presenting. Click for Light.'
+          }
+        >
+          <IconButton size="small" color={quality === 'full' ? 'primary' : 'default'} onClick={onToggleQuality}>
+            {quality === 'light' ? <EnergySavingsLeafIcon /> : <AutoAwesomeIcon />}
+          </IconButton>
+        </Tooltip>
         <Tooltip title={presentation ? 'Leave presentation mode' : 'Presentation mode: hide controls and infrastructure details'}>
           <IconButton size="small" color={presentation ? 'primary' : 'default'} onClick={onTogglePresentation}>
             <SlideshowIcon />
@@ -159,11 +213,11 @@ export default function TopBar({
         </Tooltip>
         {!presentation && (
           <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap', flexGrow: 1 }}>
-            {Object.entries(KINDS).map(([kind, { label, color }]) => (
+            {Object.entries(KINDS).map(([kind, { label }]) => (
               <Chip
                 key={kind}
                 size="small"
-                icon={<Dot color={kindsOn.has(kind) ? color : 'transparent'} />}
+                icon={<Dot color={kindsOn.has(kind) ? kindColor(kind, themes[theme].colors) : 'transparent'} />}
                 label={`${label} ${counts[kind] || 0}`}
                 variant={kindsOn.has(kind) ? 'filled' : 'outlined'}
                 onClick={() => onToggleKind(kind)}

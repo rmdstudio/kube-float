@@ -4,16 +4,20 @@ Everything kube-float does, and how each part behaves. For installing and
 starting it, see the [README](../README.md).
 
 - [The scene](#the-scene)
+- [Themes](#themes)
 - [Creatures](#creatures)
 - [Health colours](#health-colours)
 - [Wires](#wires)
+- [Activity](#activity)
 - [Flying](#flying)
 - [Selecting and details](#selecting-and-details)
 - [Pod logs](#pod-logs)
 - [Toolbar](#toolbar)
 - [Presentation mode](#presentation-mode)
 - [Full screen](#full-screen)
+- [Graphics quality](#graphics-quality)
 - [Live data](#live-data)
+- [Docker Desktop](#docker-desktop)
 - [Demo mode](#demo-mode)
 - [Safety](#safety)
 - [Settings](#settings)
@@ -32,10 +36,45 @@ that are connected pull together, everything else pushes apart.
 - **Positions are kept.** When the cluster changes, existing creatures stay
   where they are and new ones drift into place.
 
-Every creature bobs slowly, plankton drifts past to give a sense of
-speed, and distant things fade into the water.
+Every creature bobs slowly, particles drift past to give a sense of speed,
+and distant things fade into the background.
+
+## Themes
+
+The theme menu in the toolbar switches the whole look. The choice is
+remembered in this browser. Everything else (layout, wires, filters, logs)
+works the same in every theme.
+
+- **Ocean.** A dark sea with plankton. Pods are jellyfish; the rest are fish
+  and other sea animals, described below.
+- **Alien World.** A galaxy coloured after the Hubble image of the Orion
+  Nebula: a turquoise heart, red and rose gas filaments, brown dust lanes and
+  blue-white stars with four-pointed spikes. Planets are lit from one side by
+  a far-off sun. Wires barely sag, since nothing pulls them down.
+
+![Ocean](images/ocean.png)
+
+![Alien World](images/alien_world.png)
+
+| Kind | Ocean | Alien World |
+| --- | --- | --- |
+| Pod | Jellyfish | Small planet with a thin atmosphere |
+| Deployment | Whale | Tan, banded gas giant with rings |
+| StatefulSet | Shark | Blue planet with a moon in orbit |
+| DaemonSet | School of fish | Ring of tumbling asteroids |
+| Job | Small fish | Comet with a tail, on a tight orbit |
+| CronJob | Angelfish in a ring | Pulsar sweeping two beams |
+| Service | Anglerfish | Star with diffraction spikes |
+| Ingress | Manta ray | Wormhole: a black core in a swirling disk |
+| PersistentVolumeClaim | Shell | Grey moon |
+
+In Alien World the kinds use colours closer to real bodies (tan, ice blue,
+grey rock) rather than the Ocean's colours; the legend and the kind chips
+follow the theme.
 
 ## Creatures
+
+These are the Ocean's creatures.
 
 | Kind | Creature | How to recognise it |
 | --- | --- | --- |
@@ -92,6 +131,35 @@ Connections are slack wires that sag and sway. None of them are straight.
 Selecting a creature brightens its wires and dims all the others.
 
 A Service with no selector has no wires.
+
+## Activity
+
+With the flame button on (the default), wires and creatures heat up when
+pods get busy. kube-float cannot see network traffic, so it uses log output
+as a stand-in: it keeps reading every running pod and container, each time
+counting the log lines written since that pod's previous reading, so no
+activity falls between readings. A pass over the cluster starts every 5
+seconds, or straight after the last one on a cluster large enough to take
+longer.
+
+- Each pod learns its usual rate. A burst above it, such as a run of
+  requests to a service that logs each one, makes it glow strongly; steady
+  background logging only warms it a little.
+- A Deployment, Service, Ingress or Compose service takes the total of the
+  pods behind it.
+- A wire takes the heat of what it leads into; a mount takes the heat of the
+  pod mounting it.
+- Warm wires turn orange, the hottest white, and carry pulses and sparks:
+  bright dots that travel from source to target, more and faster the hotter
+  the wire. Busy creatures glow brighter.
+
+The glow shows up within a few seconds of the activity; on a cluster with
+many pods, a pass takes longer, so allow up to about 15 seconds. A service
+that does not log its requests will not light up, however busy it is.
+
+Measuring reads a few seconds of every pod's log on each pass, a little
+background work for the cluster, Docker and the browser. Turn the flame
+button off to stop it. In the demo the activity is made up.
 
 ## Flying
 
@@ -165,10 +233,10 @@ window shows the cluster's error message.
 
 ## Toolbar
 
-- **Status chip.** *Live* when reading a cluster, *Connecting…* at start-up,
-  *Demo* when showing the demo cluster. If the demo is showing because no
-  cluster was reachable, hovering the chip shows the reason and clicking it
-  tries the live cluster again.
+- **Status chip.** *Live* with the sources being read (Kubernetes, Docker or
+  both), *Connecting…* at start-up, *Demo* when showing the demo cluster.
+  Hovering it says why a source is missing. If the demo is showing because
+  nothing was reachable, clicking the chip tries the live sources again.
 - **Namespaces.** Pick one or more to show only those. With nothing picked,
   every namespace is shown except those starting with `kube-`; pick those by
   name to see them.
@@ -183,7 +251,8 @@ window shows the cluster's error message.
   with distance.
 - **Kind chips.** One per kind, with a count for the namespaces in view.
   Click a chip to hide or show that kind and its wires.
-- **Presentation mode** and **full screen**, described below.
+- **Theme**, activity, graphics quality, presentation mode and full screen,
+  described in their own sections.
 
 A collapsible legend at the bottom right lists the creatures, colours, wires
 and controls.
@@ -206,14 +275,73 @@ not want on screen.
 Press `F` or use the toolbar button. Log windows, the details card and menus
 all stay available in full screen. `F` or the browser's own `Esc` leaves it.
 
+## Graphics quality
+
+A toolbar button switches between two settings; it shows a leaf in Light
+and sparkles in Full. The choice is remembered in this browser.
+
+| | Light (default) | Full |
+| --- | --- | --- |
+| Frames per second | 30 | The display's own rate, often 60 or 120 |
+| Resolution | Standard | Sharp on high-density (Retina) screens |
+| Glow | Single half-resolution blur | Smoother multi-level blur |
+| Particles and stars | Fewer | More |
+| Wire smoothness | 16 segments | 40 segments |
+
+Light is for everyday use on a laptop; it keeps the fan quiet. Full is for
+presenting on a big screen, or on a machine with a stronger graphics card.
+
+Measured in the demo cluster in Chrome, Light uses about a third less CPU
+than Full, and both use well under half of what the first release did.
+Your numbers will vary with the screen, the machine and the size of the
+cluster.
+
 ## Live data
 
-The cluster is read again every five seconds. Creatures appear, disappear and
-change colour without the scene being rebuilt, and nothing moves unless the
-set of resources or connections changed.
+Kubernetes and Docker are read again every five seconds. Creatures appear,
+disappear and change colour without the scene being rebuilt, and nothing
+moves unless the set of resources or connections changed.
 
-If a read fails, kube-float switches to the demo cluster and stops polling.
-Click the status chip to go back to the live cluster.
+If one source fails, the other is still shown. If both fail, kube-float
+switches to the demo cluster and stops polling; click the status chip to go
+back to the live sources.
+
+## Docker Desktop
+
+Containers in Docker Desktop are shown next to the cluster, read through
+Docker's own socket. Docker Compose names are used to group them:
+
+| Docker | Shown as | Called |
+| --- | --- | --- |
+| Compose project | A namespace named `docker/<project>` | |
+| Compose service | A Deployment's creature | Compose service |
+| Container | A pod's creature | Container |
+| Container outside Compose | A pod's creature in the `docker` namespace | Container |
+| `depends_on` between services | A green wire | Depends on |
+
+They count towards the Pods and Deployments chips and are filtered the same
+way. Pick `docker/<project>` in the namespace menu to see only one project.
+
+A container's health:
+
+| State | Colour |
+| --- | --- |
+| Running | Healthy |
+| Running, health check starting; paused; created | Orange |
+| Running but unhealthy; restarting; dead; exited with an error code | Red |
+| Exited with code 0 | Grey-blue |
+
+A Compose service is healthy when all its containers run, red if any is red,
+grey-blue when all have stopped cleanly, and orange otherwise.
+
+The details card for a container shows its state, ports and image (the image
+is hidden in presentation mode). Clicking a container opens its log; clicking
+a Compose service opens the logs of its containers, with a picker.
+
+kube-float reads only the container list and container logs from Docker. It
+does not read container details, which include environment variables, or
+Compose labels other than the project, service and `depends_on`: the others
+hold paths on your computer.
 
 ## Demo mode
 
@@ -228,10 +356,14 @@ It is used when:
 
 ## Safety
 
-- **Read-only.** Only `GET` requests reach the cluster.
-- **Allow-list.** Only two kinds of request are forwarded: listing the kinds
-  in the table above, and reading a pod's log. Everything else is refused,
-  including Secrets, ConfigMaps, `exec` and port-forwarding.
+- **Read-only.** Only `GET` requests reach the cluster or Docker.
+- **Allow-list.** For Kubernetes, only two kinds of request are forwarded:
+  listing the kinds in the table above, and reading a pod's log. Everything
+  else is refused, including Secrets, ConfigMaps, `exec` and port-forwarding.
+- **Tighter still for Docker.** Docker's socket gives full control of the
+  machine, so only the container list and container logs are forwarded.
+  Container details, images, `exec`, start, stop and everything else are
+  refused.
 - **No stored credentials.** `kubectl proxy` uses your existing kubectl
   context. kube-float never sees a token or certificate.
 - **Nothing is saved.** Cluster data and logs exist only in the browser tab.
@@ -245,6 +377,7 @@ It is used when:
 | --- | --- | --- |
 | `KUBE_FLOAT_PROXY` | Address of the Kubernetes API proxy the dev server forwards to | `http://127.0.0.1:8717` |
 | `REACT_APP_DEMO` | Set to `1` to always show the demo cluster | unset |
+| `DOCKER_HOST` | A `unix://` path to the Docker socket to read | `/var/run/docker.sock`, then `~/.docker/run/docker.sock` |
 | `PORT` | Port of the web app | `3000` |
 
 The cluster shown is whichever one your current kubectl context points at.
@@ -253,7 +386,10 @@ The cluster shown is whichever one your current kubectl context points at.
 
 - Your account must be allowed to list pods across all namespaces. Any other
   kind it cannot list is shown as absent.
-- There are no CPU or memory figures, and no events.
+- There are no CPU or memory figures and no events. Activity is measured from
+  log output, not from network traffic.
+- Docker is read from the local socket only; remote Docker hosts over TCP are
+  not supported.
 - Everything is read in full every five seconds, which suits clusters of up
   to a few hundred resources.
 - Flying needs a keyboard and mouse or trackpad; there are no touch controls

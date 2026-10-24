@@ -2,15 +2,15 @@
 
 // Order here is the order used in the toolbar and legend.
 export const KINDS = {
-  Pod: { label: 'Pods', color: '#35e0d0', creature: 'jellyfish' },
-  Deployment: { label: 'Deployments', color: '#a78bfa', creature: 'whale' },
-  StatefulSet: { label: 'StatefulSets', color: '#5b9dff', creature: 'shark' },
-  DaemonSet: { label: 'DaemonSets', color: '#f77fd3', creature: 'school of fish' },
-  Job: { label: 'Jobs', color: '#a6e86b', creature: 'small fish' },
-  CronJob: { label: 'CronJobs', color: '#c6f0ff', creature: 'ringed angelfish' },
-  Service: { label: 'Services', color: '#ffd98a', creature: 'anglerfish' },
-  Ingress: { label: 'Ingresses', color: '#7dffb0', creature: 'manta ray' },
-  PersistentVolumeClaim: { label: 'Volume claims', color: '#c9b79c', creature: 'shell' },
+  Pod: { label: 'Pods', color: '#35e0d0' },
+  Deployment: { label: 'Deployments', color: '#a78bfa' },
+  StatefulSet: { label: 'StatefulSets', color: '#5b9dff' },
+  DaemonSet: { label: 'DaemonSets', color: '#f77fd3' },
+  Job: { label: 'Jobs', color: '#a6e86b' },
+  CronJob: { label: 'CronJobs', color: '#c6f0ff' },
+  Service: { label: 'Services', color: '#ffd98a' },
+  Ingress: { label: 'Ingresses', color: '#7dffb0' },
+  PersistentVolumeClaim: { label: 'Volume claims', color: '#c9b79c' },
 };
 
 export const STATUS = {
@@ -24,10 +24,16 @@ export const WIRES = {
   owns: { label: 'Owns', color: '#6fd6ff' },
   routes: { label: 'Routes to', color: '#ffd98a' },
   mounts: { label: 'Mounts', color: '#c9b79c' },
+  depends: { label: 'Depends on (Compose)', color: '#8fe39a' },
 };
 
-export function creatureColor(node) {
-  return STATUS[node.status]?.color || KINDS[node.kind].color;
+// A theme can recolour kinds; `colors` is its { kind: colour } overrides.
+export function kindColor(kind, colors = {}) {
+  return colors[kind] || KINDS[kind].color;
+}
+
+export function creatureColor(node, colors) {
+  return STATUS[node.status]?.color || kindColor(node.kind, colors);
 }
 
 export const isSystemNamespace = (ns) => ns.startsWith('kube-');
