@@ -22,7 +22,7 @@ function Row({ label, value }) {
   );
 }
 
-export default function DetailsCard({ node, connections, presentation, logPods, onGlide, onLogs, onClose }) {
+export default function DetailsCard({ colors, node, connections, presentation, logPods, onGlide, onLogs, onClose }) {
   const rows = [
     !presentation && ['Namespace', node.namespace],
     ['Status', node.statusText],
@@ -35,13 +35,13 @@ export default function DetailsCard({ node, connections, presentation, logPods, 
   return (
     <Paper elevation={0} sx={{ ...glass, position: 'fixed', left: 12, bottom: 12, zIndex: 15, width: 320, p: 1.5 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-        <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, bgcolor: creatureColor(node) }} />
+        <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, bgcolor: creatureColor(node, colors) }} />
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
           <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
             {node.name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {node.kind}
+            {node.kindLabel || node.kind}
           </Typography>
         </Box>
         <IconButton size="small" aria-label="Close details" onClick={onClose}>

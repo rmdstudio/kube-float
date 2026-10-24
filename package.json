@@ -1,11 +1,12 @@
 {
   "name": "kube-float",
   "version": "0.1.0",
-  "description": "Visualize a Kubernetes cluster as jellyfish floating in a 3D ocean",
+  "description": "Fly through your Kubernetes cluster and Docker containers as an ocean or an alien world",
   "license": "MIT",
-  "author": "rmd Studio Inc. <info@rmdstudio.com> (https://www.rmdstudio.com)",  "private": true,
+  "author": "rmd Studio Inc. <info@rmdstudio.com> (https://www.rmdstudio.com)",
+  "private": true,
   "scripts": {
-    "start": "concurrently -k -n k8s,web -c cyan,magenta \"yarn proxy\" \"yarn web\"",
+    "start": "concurrently -n k8s,web -c cyan,magenta \"yarn proxy\" \"yarn web\"",
     "web": "react-scripts start",
     "proxy": "kubectl proxy --port=8717 --address=127.0.0.1",
     "demo": "REACT_APP_DEMO=1 react-scripts start",

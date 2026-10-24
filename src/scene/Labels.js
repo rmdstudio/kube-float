@@ -82,15 +82,20 @@ export default function Labels({ items }) {
       const distance = p.distanceTo(camera.position);
       p.project(camera);
       const fade = pinned ? 1 : 1 - THREE.MathUtils.smoothstep(distance, FADE_START, FADE_END);
+      const tag = tags.current.get(item.id);
       if (p.z > 1 || p.z < -1 || fade <= 0.01) {
-        el.style.display = 'none';
+        if (tag.shown !== false) el.style.display = 'none';
+        tag.shown = false;
         continue;
       }
-      const x = (p.x * 0.5 + 0.5) * size.width;
-      const y = (-p.y * 0.5 + 0.5) * size.height;
-      el.style.display = '';
-      el.style.opacity = fade;
-      el.style.transform = `translate(-50%, -100%) translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      // Touch the page only when something visibly changed.
+      const x = Math.round((p.x * 0.5 + 0.5) * size.width);
+      const y = Math.round((-p.y * 0.5 + 0.5) * size.height);
+      const opacity = Math.round(fade * 20) / 20;
+      if (tag.shown !== true) el.style.display = '';
+      if (tag.opacity !== opacity) el.style.opacity = opacity;
+      if (tag.x !== x || tag.y !== y) el.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+      Object.assign(tag, { shown: true, opacity, x, y });
     }
   });
 

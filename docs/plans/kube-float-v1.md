@@ -103,6 +103,11 @@ at this scale.)
 - ✅ Non-pod kinds are fish: whale, shark, school, small fish, angelfish, anglerfish, manta ray
 - ✅ Spacing slider
 - ✅ Search fades non-matches, names matches, Enter flies to the next one
+- ✅ Light and Full graphics modes; wires and labels no longer rewrite every frame
+- ✅ Themes: Ocean and Alien World (Hubble Orion Nebula palette)
+- ✅ Docker Desktop containers as a second source, read-only (container list and logs only)
+- ✅ Wires heat up with activity, measured from log output (bursts above each pod's usual rate)
+- ⏸ Heat from real request rates: needs a traffic source such as a service mesh or Prometheus
 
 ## Not done in v1
 - Restarts do not make a pod twitch; the restart count is in the details card.

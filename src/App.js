@@ -4,8 +4,11 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { KINDS, isSystemNamespace } from './constants';
 import { filterGraph, podsBehind } from './k8s/graph';
+import { heatOf, useActivity } from './k8s/activity';
 import { useCluster } from './k8s/useCluster';
-import Ocean from './scene/Ocean';
+import World from './scene/World';
+import { saveQuality, savedQuality } from './scene/quality';
+import { THEMES, saveTheme, savedTheme } from './scene/themes';
 import DetailsCard from './ui/DetailsCard';
 import Legend from './ui/Legend';
 import LogWindow from './ui/LogWindow';
@@ -21,6 +24,16 @@ const REACHES = ['owns', 'routes'];
 
 const isTyping = (target) => /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable;
 
+const ACTIVITY_KEY = 'kube-float.activity';
+
+function savedActivity() {
+  try {
+    return localStorage.getItem(ACTIVITY_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
 function toggleFullscreen() {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen();
@@ -33,6 +46,9 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [showLabels, setShowLabels] = useState(true);
   const [spacing, setSpacing] = useState(1);
+  const [quality, setQuality] = useState(savedQuality);
+  const [theme, setTheme] = useState(savedTheme);
+  const [activity, setActivity] = useState(savedActivity);
   const [presentation, setPresentation] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [glide, setGlide] = useState(null);
@@ -67,6 +83,13 @@ export default function App() {
     if (!term || !visible) return null;
     return new Set(visible.nodes.filter((n) => n.name.toLowerCase().includes(term)).map((n) => n.id));
   }, [search, visible]);
+
+  const visiblePods = useMemo(() => (visible ? visible.nodes.filter((n) => n.kind === 'Pod') : []), [visible]);
+  const rates = useActivity({ enabled: activity && Boolean(graph), demo: cluster.mode === 'demo', pods: visiblePods });
+  const heat = useMemo(
+    () => (visible ? heatOf(visible.nodes, rates, (id) => podsBehind(visible, id, REACHES)) : new Map()),
+    [visible, rates]
+  );
 
   // Enter in the search field flies to the next match.
   const nextMatch = useRef(0);
@@ -117,13 +140,16 @@ export default function App() {
   return (
     <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'background.default' }}>
       {visible ? (
-        <Ocean
+        <World
+          theme={theme}
+          heat={heat}
           graph={visible}
           selectedId={selected?.id || null}
           matchIds={matchIds}
           showLabels={showLabels}
           presentation={presentation}
           spacing={spacing}
+          quality={quality}
           glide={glide}
           onSelect={select}
           onGlide={glideTo}
@@ -157,6 +183,28 @@ export default function App() {
         onSearchSubmit={visitMatch}
         spacing={spacing}
         onSpacing={setSpacing}
+        theme={theme}
+        themes={THEMES}
+        onTheme={(next) => {
+          saveTheme(next);
+          setTheme(next);
+        }}
+        activity={activity}
+        onToggleActivity={() => {
+          const next = !activity;
+          try {
+            localStorage.setItem(ACTIVITY_KEY, next ? 'on' : 'off');
+          } catch {
+            // Private windows can refuse storage; the choice then lasts this visit.
+          }
+          setActivity(next);
+        }}
+        quality={quality}
+        onToggleQuality={() => {
+          const next = quality === 'light' ? 'full' : 'light';
+          saveQuality(next);
+          setQuality(next);
+        }}
         showLabels={showLabels}
         onToggleLabels={() => setShowLabels((v) => !v)}
         presentation={presentation}
@@ -167,6 +215,7 @@ export default function App() {
 
       {selected && (
         <DetailsCard
+          colors={THEMES[theme].colors}
           node={selected}
           connections={connections}
           presentation={presentation}
@@ -177,7 +226,7 @@ export default function App() {
         />
       )}
 
-      {!presentation && <Legend />}
+      {!presentation && <Legend names={THEMES[theme].names} colors={THEMES[theme].colors} />}
 
       {logs.map((id, index) => {
         const owner = byId.get(id);
@@ -185,6 +234,7 @@ export default function App() {
         return (
           pods.length > 0 && (
             <LogWindow
+              colors={THEMES[theme].colors}
               key={id}
               owner={owner}
               pods={pods}

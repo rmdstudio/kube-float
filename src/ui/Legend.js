@@ -8,7 +8,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { KINDS, STATUS, WIRES } from '../constants';
+import { KINDS, STATUS, WIRES, kindColor } from '../constants';
 import { glass } from '../theme';
 
 const CONTROLS = [
@@ -56,7 +56,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function Legend() {
+export default function Legend({ names, colors }) {
   const [open, setOpen] = useState(true);
   return (
     <Paper elevation={0} sx={{ ...glass, position: 'fixed', right: 12, bottom: 12, zIndex: 15, width: 250, px: 1.5, py: 0.5 }}>
@@ -70,9 +70,9 @@ export default function Legend() {
       </Stack>
       <Collapse in={open}>
         <Box sx={{ pb: 1, maxHeight: '60vh', overflowY: 'auto' }}>
-          <Section title="Creatures">
+          <Section title="What is what">
             {Object.entries(KINDS).map(([kind, k]) => (
-              <Entry key={kind} color={k.color} label={k.label} hint={k.creature} />
+              <Entry key={kind} color={kindColor(kind, colors)} label={k.label} hint={names[kind]} />
             ))}
           </Section>
           <Section title="Health">
@@ -86,6 +86,7 @@ export default function Legend() {
             {Object.entries(WIRES).map(([key, w]) => (
               <Entry key={key} line color={w.color} label={w.label} />
             ))}
+            <Entry line color="#ff9a3c" label="Busy" hint="orange to white, with sparks" />
           </Section>
           <Section title="Flying">
             {CONTROLS.map(([keys, action]) => (

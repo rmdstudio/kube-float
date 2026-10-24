@@ -16,6 +16,7 @@ import WrapTextIcon from '@mui/icons-material/WrapText';
 import { creatureColor } from '../constants';
 import { openLogStream } from '../k8s/api';
 import { openDemoLogStream } from '../k8s/demo';
+import { openDockerLogStream } from '../k8s/docker';
 import { glass } from '../theme';
 
 const MAX_LINES = 3000;
@@ -24,7 +25,7 @@ const TAILS = [100, 500, 2000];
 // A floating window showing a pod's log. Opened from a pod it shows that pod;
 // opened from something that runs pods (`owner`) it lets you pick among them.
 // Drag it by the header; resize it from the bottom-right corner.
-export default function LogWindow({ owner, pods, demo, index, zIndex, onFocus, onClose, onGlide }) {
+export default function LogWindow({ colors, owner, pods, demo, index, zIndex, onFocus, onClose, onGlide }) {
   const [position, setPosition] = useState({ x: 40 + index * 36, y: 110 + index * 36 });
   const [podId, setPodId] = useState(pods[0].id);
   const node = pods.find((p) => p.id === podId) || pods[0];
@@ -38,12 +39,14 @@ export default function LogWindow({ owner, pods, demo, index, zIndex, onFocus, o
   const body = useRef();
   const drag = useRef(null);
   const failing = node.status === 'failed';
+  const dockerId = node.docker?.id;
 
   useEffect(() => {
     setLines([]);
     setNote('Opening…');
-    const open = demo ? openDemoLogStream : openLogStream;
+    const open = demo ? openDemoLogStream : dockerId ? openDockerLogStream : openLogStream;
     return open({
+      containerId: dockerId,
       namespace: node.namespace,
       pod: node.name,
       container,
@@ -57,7 +60,7 @@ export default function LogWindow({ owner, pods, demo, index, zIndex, onFocus, o
       onError: (err) => setNote(`Could not read the log: ${err.message}`),
       onEnd: () => setNote(follow ? 'The stream ended.' : ''),
     });
-  }, [demo, node.namespace, node.name, container, failing, tail, follow]);
+  }, [demo, dockerId, node.namespace, node.name, container, failing, tail, follow]);
 
   useEffect(() => {
     if (follow && body.current) body.current.scrollTop = body.current.scrollHeight;
@@ -118,7 +121,7 @@ export default function LogWindow({ owner, pods, demo, index, zIndex, onFocus, o
           borderBottom: '1px solid rgba(120, 200, 255, 0.16)',
         }}
       >
-        <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, bgcolor: creatureColor(node) }} />
+        <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, bgcolor: creatureColor(node, colors) }} />
         <Typography variant="body2" noWrap sx={{ fontWeight: 600, flexGrow: 1, minWidth: 60 }}>
           {owner.name}
         </Typography>

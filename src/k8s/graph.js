@@ -36,7 +36,7 @@ const matches = (selector, labels = {}) => Object.entries(selector).every(([k, v
 
 // `info` rows are [label, value, sensitive]; sensitive rows are hidden in
 // presentation mode.
-export function buildGraph(raw) {
+export function buildGraph(raw, extra = { nodes: [], links: [] }) {
   const nodes = [];
   const links = [];
   const add = (kind, obj, [status, statusText], extra = {}) => {
@@ -155,6 +155,9 @@ export function buildGraph(raw) {
       info: [['Size', c.spec?.resources?.requests?.storage]],
     });
   }
+
+  nodes.push(...extra.nodes);
+  links.push(...extra.links);
 
   const known = new Set(nodes.map((n) => n.id));
   const validLinks = links.filter((l) => known.has(l.source) && known.has(l.target));
